@@ -193,6 +193,117 @@ class TestUpdateAPI:
 
 
 @pytest.mark.django_db
+class TestPartialUpdateAPI:
+    def test_when_request_data_is_valid_then_update_only_category_name(
+        self,
+        category_movie: Category,
+        category_repository: DjangoORMCategoryRepository,
+    ) -> None:
+        category_repository.save(category_movie)
+
+        url = reverse("category-detail", kwargs={"pk": category_movie.id})
+        data = {
+            "name": "SomeMarvelMovie",
+        }
+        response = APIClient().patch(url, data=data)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not response.data
+        updated_category = category_repository.get_by_id(category_movie.id)
+        assert updated_category.name == "SomeMarvelMovie"
+        assert updated_category.description == "Movie description"
+        assert updated_category.is_active is True
+
+    def test_when_request_data_is_valid_then_update_only_category_description(
+        self,
+        category_movie: Category,
+        category_repository: DjangoORMCategoryRepository,
+    ) -> None:
+        category_repository.save(category_movie)
+
+        url = reverse("category-detail", kwargs={"pk": category_movie.id})
+        data = {
+            "description": "Some description about a drama movie",
+        }
+        response = APIClient().patch(url, data=data)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not response.data
+        updated_category = category_repository.get_by_id(category_movie.id)
+        assert updated_category.name == "Movie"
+        assert updated_category.description == "Some description about a drama movie"
+        assert updated_category.is_active is True
+
+    def test_when_request_data_is_valid_then_update_only_category_activation(
+        self,
+        category_movie: Category,
+        category_repository: DjangoORMCategoryRepository,
+    ) -> None:
+        category_repository.save(category_movie)
+
+        url = reverse("category-detail", kwargs={"pk": category_movie.id})
+        data = {
+            "is_active": False,
+        }
+        response = APIClient().patch(url, data=data)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not response.data
+        updated_category = category_repository.get_by_id(category_movie.id)
+        assert updated_category.name == "Movie"
+        assert updated_category.description == "Movie description"
+        assert updated_category.is_active is False
+
+    def test_when_request_data_is_valid_then_update_category_name_and_description(
+        self,
+        category_movie: Category,
+        category_repository: DjangoORMCategoryRepository,
+    ) -> None:
+        category_repository.save(category_movie)
+
+        url = reverse("category-detail", kwargs={"pk": category_movie.id})
+        data = {
+            "name": "SomeMarvelMovie",
+            "description": "Some description about a drama movie",
+        }
+        response = APIClient().patch(url, data=data)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not response.data
+        updated_category = category_repository.get_by_id(category_movie.id)
+        assert updated_category.name == "SomeMarvelMovie"
+        assert updated_category.description == "Some description about a drama movie"
+        assert updated_category.is_active is True
+
+    def test_when_request_data_is_invalid_then_return_400(self) -> None:
+        url = reverse("category-detail", kwargs={"pk": "invalid-uuid"})
+        data = {
+            "name": "",
+            "description": "Movie description",
+        }
+        response = APIClient().patch(url, data=data)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data == {
+            "id": ["Must be a valid UUID."],
+            "name": ["This field may not be blank."]
+        }
+
+    def test_missing_category_then_return_404(
+        self,
+    ) -> None:
+        url = reverse("category-detail", kwargs={"pk": uuid4()})
+        data = {
+            "name": "Fake Movie",
+            "description": "Fake description",
+            "is_active": False,
+        }
+        response = APIClient().patch(url, data=data)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
 class TestDeleteAPI:
     def test_when_category_pk_is_invalid_then_return_400(self) -> None:
         url = reverse("category-detail", kwargs={"pk": "invalid-uuid"})
