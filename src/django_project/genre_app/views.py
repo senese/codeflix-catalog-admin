@@ -5,9 +5,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
-    HTTP_201_CREATED, HTTP_400_BAD_REQUEST,
 )
 
 from src.core.genre.application.use_cases import (
@@ -28,6 +29,7 @@ from src.django_project.genre_app.serializers import (
     CreateGenreInputSerializer,
     DeleteGenreInputSerializer,
     CreateGenreOutputSerializer,
+    UpdateGenreInputSerializer,
 )
 
 
@@ -80,4 +82,21 @@ class GenreViewSet(viewsets.ViewSet):
         return Response(status=HTTP_204_NO_CONTENT)
 
     def update(self, request: Request, pk: UUID = None):
-        pass
+        serializer = UpdateGenreInputSerializer(data={
+            **request.data,
+            "id": pk,
+        })
+
+        input = UpdateGenre.Input(**serializer.validated_data)
+        use_case = UpdateGenre(
+            repository=DjangoORMGenreRepository(),
+            category_repository=DjangoORMCategoryRepository()
+        )
+        try:
+            use_case.execute(input)
+        except GenreNotFound:
+            return Response(status=HTTP_404_NOT_FOUND)
+        except (InvalidGenre, RelatedCategoriesNotFound):
+            return Response(status=HTTP_400_BAD_REQUEST)
+
+        return Response(status=HTTP_204_NO_CONTENT)
