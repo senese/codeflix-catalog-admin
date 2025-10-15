@@ -36,7 +36,11 @@ class UpdateGenre:
                 genre.deactivate()
             genre.change_name(input.name)
 
-            genre.update_categories(input.categories)
+            for category in genre.categories.copy():
+                genre.remove_category(category)
+
+            for category in input.categories:
+                genre.add_category(category)
         except ValueError as error:
             raise InvalidGenre(error)
 
