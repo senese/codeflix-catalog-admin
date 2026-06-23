@@ -1,11 +1,12 @@
 from unittest.mock import create_autospec
 
 import pytest
+from src import config
+from src.core._shared.application.list_pagination import ListOutputMeta, ListRequest
 from src.core.cast_member.domain.cast_member_repository import CastMemberRepository
 from src.core.cast_member.application.use_cases.list_cast_member import (
     CastMemberOutput,
     ListCastMember,
-    ListCastMemberRequest,
     ListCastMemberResponse,
 )
 from src.core.cast_member.domain.cast_member import CastMember, CastMemberType
@@ -50,7 +51,7 @@ class TestListCastMember:
         mock_empty_repository: CastMemberRepository,
     ) -> None:
         use_case = ListCastMember(repository=mock_empty_repository)
-        response = use_case.execute(request=ListCastMemberRequest())
+        response = use_case.execute(request=ListRequest())
 
         assert response == ListCastMemberResponse(data=[])
 
@@ -61,7 +62,7 @@ class TestListCastMember:
         director: CastMember,
     ) -> None:
         use_case = ListCastMember(repository=mock_populated_repository)
-        response = use_case.execute(request=ListCastMemberRequest())
+        response = use_case.execute(request=ListRequest())
 
         assert response == ListCastMemberResponse(
             data=[
@@ -75,5 +76,10 @@ class TestListCastMember:
                     name=director.name,
                     type=director.type,
                 ),
-            ]
+            ],
+            meta=ListOutputMeta(
+                current_page=1,
+                per_page=config.DEFAULT_PAGINATION_SIZE,
+                total=2,
+            )
         )
