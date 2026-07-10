@@ -51,6 +51,15 @@ def genre_drama() -> Genre:
 
 
 @pytest.fixture
+def genre_comedy() -> Genre:
+    return Genre(
+        name="Comedy",
+        is_active=True,
+        categories=set(),
+    )
+
+
+@pytest.fixture
 def genre_repository() -> DjangoORMGenreRepository:
     return DjangoORMGenreRepository()
 
@@ -74,40 +83,59 @@ class TestListAPI:
         url = "/api/genres/"
         response = APIClient().get(url)
 
-        # TODO: Quando implementarmos ordenação, poderemos comparar expected_data
-        # expected_data = {
-        #     "data": [
-        #         {
-        #             "id": str(genre_romance.id),
-        #             "name": "Romance",
-        #             "is_active": True,
-        #             "categories": [
-        #                 str(category_documentary.id),
-        #                 str(category_movie.id),
-        #             ],
-        #         },
-        #         {
-        #             "id": str(genre_drama.id),
-        #             "name": "Drama",
-        #             "is_active": True,
-        #             "categories": [],
-        #         },
-        #     ]
-        # }
-
         assert response.status_code == status.HTTP_200_OK
         assert response.data["data"]
-        assert response.data["data"][0]["id"] == str(genre_romance.id)
-        assert response.data["data"][0]["name"] == "Romance"
+        assert response.data["data"][0]["id"] == str(genre_drama.id)
+        assert response.data["data"][0]["name"] == "Drama"
         assert response.data["data"][0]["is_active"] is True
-        assert set(response.data["data"][0]["categories"]) == {
+        assert response.data["data"][0]["categories"] == []
+        assert response.data["data"][1]["id"] == str(genre_romance.id)
+        assert response.data["data"][1]["name"] == "Romance"
+        assert response.data["data"][1]["is_active"] is True
+        assert set(response.data["data"][1]["categories"]) == {
             str(category_documentary.id),
             str(category_movie.id),
         }
+
+        assert response.data["meta"]
+        assert response.data["meta"]["current_page"] == 1
+        assert response.data["meta"]["per_page"] == 2
+        assert response.data["meta"]["total"] == 2
+
+    def test_list_genres_and_categories_with_pagination(
+        self,
+        category_movie: Category,
+        category_documentary: Category,
+        category_repository: DjangoORMCategoryRepository,
+        genre_romance: Genre,
+        genre_drama: Genre,
+        genre_comedy: Genre,
+        genre_repository: DjangoORMGenreRepository,
+    ) -> None:
+        category_repository.save(category_movie)
+        category_repository.save(category_documentary)
+        genre_repository.save(genre_romance)
+        genre_repository.save(genre_drama)
+        genre_repository.save(genre_comedy)
+
+        url = "/api/genres/"
+        response = APIClient().get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["data"]
+        assert response.data["data"][0]["id"] == str(genre_comedy.id)
+        assert response.data["data"][0]["name"] == "Comedy"
+        assert response.data["data"][0]["is_active"] is True
+        assert response.data["data"][0]["categories"] == []
         assert response.data["data"][1]["id"] == str(genre_drama.id)
         assert response.data["data"][1]["name"] == "Drama"
         assert response.data["data"][1]["is_active"] is True
-        assert response.data["data"][1]["categories"] == []
+        assert set(response.data["data"][1]["categories"]) == set()
+
+        assert response.data["meta"]
+        assert response.data["meta"]["current_page"] == 1
+        assert response.data["meta"]["per_page"] == 2
+        assert response.data["meta"]["total"] == 3
 
 
 @pytest.mark.django_db

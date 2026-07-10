@@ -1,18 +1,14 @@
 from rest_framework import serializers
 
+from src.django_project._shared.serializers.list_serializer import ListOutputMetaSerializer
+
 
 class CategoryResponseSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     name = serializers.CharField(max_length=255)
     description = serializers.CharField(max_length=255)
     is_active = serializers.BooleanField()
-
-
-class ListOutputMetaSerializer(serializers.Serializer):
-    current_page = serializers.IntegerField()
-    per_page = serializers.IntegerField()
-    total = serializers.IntegerField()
-
+    
 
 class ListCategoryResponseSerializer(serializers.Serializer):
     data = CategoryResponseSerializer(many=True)

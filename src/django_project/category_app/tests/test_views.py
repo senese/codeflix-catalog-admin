@@ -19,6 +19,14 @@ def category_movie():
 
 
 @pytest.fixture
+def other_category_movie():
+    return Category(
+        name="Other Movie",
+        description="Movie description",
+    )
+
+
+@pytest.fixture
 def category_documentary():
     return Category(
         name="Documentary",
@@ -64,6 +72,45 @@ class TestListAPI:
                 "current_page": 1,
                 "per_page": DEFAULT_PAGINATION_SIZE,
                 "total": 2,
+            },
+        }
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == expected_data
+
+    def test_list_categories_with_pagination(
+        self,
+        category_movie: Category,
+        other_category_movie: Category,
+        category_documentary: Category,
+        category_repository: DjangoORMCategoryRepository,
+    ) -> None:
+        category_repository.save(category_movie)
+        category_repository.save(other_category_movie)
+        category_repository.save(category_documentary)
+
+        url = "/api/categories/"
+        response = APIClient().get(url)
+
+        expected_data = {
+            "data": [
+                {
+                    "id": str(category_documentary.id),
+                    "name": "Documentary",
+                    "description": "Documentary description",
+                    "is_active": True,
+                },
+                {
+                    "id": str(category_movie.id),
+                    "name": "Movie",
+                    "description": "Movie description",
+                    "is_active": True,
+                },
+            ],
+            "meta": {
+                "current_page": 1,
+                "per_page": 2,
+                "total": 3,
             },
         }
 

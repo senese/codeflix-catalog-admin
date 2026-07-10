@@ -10,6 +10,7 @@ from rest_framework.status import (
     HTTP_201_CREATED, HTTP_400_BAD_REQUEST,
 )
 
+from src.core._shared.application.list_pagination import ListRequest
 from src.core.genre.application.use_cases import (
     ListGenre,
     CreateGenre,
@@ -21,6 +22,7 @@ from src.core.genre.application.use_cases.exceptions import (
     InvalidGenre,
     RelatedCategoriesNotFound,
 )
+from src.core.genre.application.use_cases.list_genre import ListGenreResponse
 from src.django_project.category_app.repository import DjangoORMCategoryRepository
 from src.django_project.genre_app.repository import DjangoORMGenreRepository
 from src.django_project.genre_app.serializers import (
@@ -35,7 +37,7 @@ from src.django_project.genre_app.serializers import (
 class GenreViewSet(viewsets.ViewSet):
     def list(self, request: Request) -> Response:
         use_case = ListGenre(repository=DjangoORMGenreRepository())
-        output: ListGenre.Input = use_case.execute(ListGenre.Input())
+        output: ListGenreResponse = use_case.execute(ListRequest())
         response_serializer = ListGenreOutputSerializer(output)
 
         return Response(

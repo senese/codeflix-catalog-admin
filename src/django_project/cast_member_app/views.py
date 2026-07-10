@@ -11,6 +11,7 @@ from rest_framework.status import (
     HTTP_201_CREATED,
 )
 from rest_framework.fields import UUIDField
+from src.core._shared.application.list_pagination import ListRequest
 from src.core.cast_member.application.use_cases.create_cast_member import (
     CreateCastMember,
     CreateCastMemberRequest,
@@ -23,7 +24,6 @@ from src.core.cast_member.application.use_cases.exceptions import (
 
 from src.core.cast_member.application.use_cases.list_cast_member import (
     ListCastMember,
-    ListCastMemberRequest,
     ListCastMemberResponse,
 )
 from src.core.cast_member.application.use_cases.update_cast_member import UpdateCastMember, UpdateCastMemberRequest
@@ -40,7 +40,7 @@ from src.django_project.cast_member_app.serializers import (
 class CastMemberViewSet(viewsets.ViewSet):
     def list(self, request: Request) -> Response:
         use_case = ListCastMember(repository=DjangoORMCastMemberRepository())
-        output: ListCastMemberResponse = use_case.execute(request=ListCastMemberRequest())
+        output: ListCastMemberResponse = use_case.execute(request=ListRequest())
         response_serializer = ListCastMemberResponseSerializer(output)
 
         return Response(

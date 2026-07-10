@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from src.core.cast_member.domain.cast_member import CastMemberType
+from src.django_project._shared.serializers.list_serializer import ListOutputMetaSerializer
 
 
 class CastMemberTypeField(serializers.ChoiceField):
@@ -23,6 +24,7 @@ class CastMemberResponseSerializer(serializers.Serializer):
 
 class ListCastMemberResponseSerializer(serializers.Serializer):
     data = CastMemberResponseSerializer(many=True)
+    meta = ListOutputMetaSerializer()
 
 
 class CreateCastMemberRequestSerializer(serializers.Serializer):

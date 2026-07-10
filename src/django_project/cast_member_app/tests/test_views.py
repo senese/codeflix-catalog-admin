@@ -16,6 +16,13 @@ def actor():
         type=CastMemberType.ACTOR,
     )
 
+@pytest.fixture
+def other_actor():
+    return CastMember(
+        name="Jane Doe",
+        type=CastMemberType.ACTOR,
+    )
+
 
 @pytest.fixture
 def director():
@@ -56,7 +63,49 @@ class TestListAPI:
                     "name": "John Krasinski",
                     "type": "DIRECTOR",
                 },
-            ]
+            ],
+            "meta": {
+                "current_page": 1,
+                "per_page": 2,
+                "total": 2,
+            },
+        }
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == expected_data
+
+    def test_list_cast_members_with_pagination(
+        self,
+        actor: CastMember,
+        other_actor: CastMember,
+        director: CastMember,
+        cast_member_repository: DjangoORMCastMemberRepository,
+    ) -> None:
+        cast_member_repository.save(actor)
+        cast_member_repository.save(other_actor)
+        cast_member_repository.save(director)
+
+        url = "/api/cast_members/"
+        response = APIClient().get(url)
+
+        expected_data = {
+            "data": [
+                {
+                    "id": str(other_actor.id),
+                    "name": "Jane Doe",
+                    "type": "ACTOR",
+                },
+                {
+                    "id": str(actor.id),
+                    "name": "John Doe",
+                    "type": "ACTOR",
+                },
+            ],
+            "meta": {
+                "current_page": 1,
+                "per_page": 2,
+                "total": 3,
+            },
         }
 
         assert response.status_code == status.HTTP_200_OK
