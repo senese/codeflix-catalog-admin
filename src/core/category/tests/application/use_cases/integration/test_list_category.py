@@ -1,9 +1,9 @@
 import pytest
 
+from src.core._shared.application.list_pagination import ListRequest
 from src.core.category.application.use_cases.list_category import (
     CategoryOutput,
     ListCategory,
-    ListCategoryRequest,
     ListCategoryResponse, ListOutputMeta,
 )
 from src.core.category.domain.category import Category
@@ -37,7 +37,7 @@ class TestListCategory:
     def test_when_no_categories_then_return_empty_list(self) -> None:
         empty_repository = InMemoryCategoryRepository()
         use_case = ListCategory(repository=empty_repository)
-        response = use_case.execute(request=ListCategoryRequest())
+        response = use_case.execute(request=ListRequest())
 
         assert response == ListCategoryResponse(
             data=[],
@@ -56,7 +56,7 @@ class TestListCategory:
         repository.save(category=category_documentary)
 
         use_case = ListCategory(repository=repository)
-        response = use_case.execute(request=ListCategoryRequest())
+        response = use_case.execute(request=ListRequest())
 
         assert response == ListCategoryResponse(
             data=[

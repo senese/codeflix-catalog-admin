@@ -1,13 +1,14 @@
 from unittest.mock import patch
 from uuid import UUID, uuid4
+
+import pytest
 from django.test import override_settings
 from django.urls import reverse
-import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
+
 from src.config import DEFAULT_PAGINATION_SIZE
 from src.core.category.domain.category import Category
-
 from src.django_project.category_app.repository import DjangoORMCategoryRepository
 from src.django_project.category_app.views import CategoryViewSet
 
@@ -16,6 +17,14 @@ from src.django_project.category_app.views import CategoryViewSet
 def category_movie():
     return Category(
         name="Movie",
+        description="Movie description",
+    )
+
+
+@pytest.fixture
+def other_category_movie():
+    return Category(
+        name="Other Movie",
         description="Movie description",
     )
 
@@ -71,6 +80,78 @@ class TestListAPI:
                 "current_page": 1,
                 "per_page": DEFAULT_PAGINATION_SIZE,
                 "total": 2,
+            },
+        }
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == expected_data
+
+    def test_list_categories_on_page_1(
+        self,
+        category_movie: Category,
+        other_category_movie: Category,
+        category_documentary: Category,
+        category_repository: DjangoORMCategoryRepository,
+    ) -> None:
+        category_repository.save(category_movie)
+        category_repository.save(other_category_movie)
+        category_repository.save(category_documentary)
+
+        url = "/api/categories/"
+        response = APIClient().get(url)
+
+        expected_data = {
+            "data": [
+                {
+                    "id": str(category_documentary.id),
+                    "name": "Documentary",
+                    "description": "Documentary description",
+                    "is_active": True,
+                },
+                {
+                    "id": str(category_movie.id),
+                    "name": "Movie",
+                    "description": "Movie description",
+                    "is_active": True,
+                },
+            ],
+            "meta": {
+                "current_page": 1,
+                "per_page": 2,
+                "total": 3,
+            },
+        }
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == expected_data
+
+    def test_list_categories_on_page_2(
+        self,
+        category_movie: Category,
+        other_category_movie: Category,
+        category_documentary: Category,
+        category_repository: DjangoORMCategoryRepository,
+    ) -> None:
+        category_repository.save(category_movie)
+        category_repository.save(other_category_movie)
+        category_repository.save(category_documentary)
+
+        url = "/api/categories/?current_page=2"
+        response = APIClient().get(url)
+
+        expected_data = {
+            "data": [
+                {
+                    "id": str(other_category_movie.id),
+                    "name": "Other Movie",
+                    "description": "Movie description",
+                    "is_active": True,
+                },
+            ],
+            "meta": {
+                "current_page": 2,
+                "per_page": 2,
+                "total": 3,
             },
         }
 

@@ -1,9 +1,12 @@
-from abc import ABC
-from dataclasses import dataclass, field
-from typing import Generic, TypeVar
+from dataclasses import dataclass
 from uuid import UUID
 
 from src import config
+from src.core._shared.application.list_pagination import (
+    ListOutput,
+    ListRequest,
+    ListOutputMeta,
+)
 from src.core.category.domain.category_repository import CategoryRepository
 
 
@@ -16,28 +19,6 @@ class CategoryOutput:
 
 
 @dataclass
-class ListCategoryRequest:
-    order_by: str = "name"  # Desafio: ordenação decrescente? ASC/DESC
-    current_page: int = 1
-
-
-@dataclass
-class ListOutputMeta:
-    current_page: int = 1
-    per_page: int = config.DEFAULT_PAGINATION_SIZE
-    total: int = 0
-
-
-T = TypeVar("T")
-
-
-@dataclass
-class ListOutput(Generic[T], ABC):
-    data: list[T] = field(default_factory=list)
-    meta: ListOutputMeta = field(default_factory=ListOutputMeta)
-
-
-@dataclass
 class ListCategoryResponse(ListOutput[CategoryOutput]):
     pass
 
@@ -46,7 +27,7 @@ class ListCategory:
     def __init__(self, repository: CategoryRepository) -> None:
         self.repository = repository
 
-    def execute(self, request: ListCategoryRequest) -> ListCategoryResponse:
+    def execute(self, request: ListRequest) -> ListCategoryResponse:
         categories = self.repository.list()
         ordered_categories = sorted(
             categories,

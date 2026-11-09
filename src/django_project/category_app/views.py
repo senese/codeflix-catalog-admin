@@ -10,6 +10,7 @@ from rest_framework.status import (
     HTTP_201_CREATED,
 )
 
+from src.core._shared.application.list_pagination import ListRequest
 from src.core.category.application.use_cases.create_category import (
     CreateCategory,
     CreateCategoryRequest,
@@ -24,7 +25,6 @@ from src.core.category.application.use_cases.get_category import (
 )
 from src.core.category.application.use_cases.list_category import (
     ListCategory,
-    ListCategoryRequest,
     ListCategoryResponse,
 )
 from src.core.category.application.use_cases.update_category import UpdateCategory, UpdateCategoryRequest
@@ -46,10 +46,11 @@ class CategoryViewSet(viewsets.ViewSet):
 
     def list(self, request: Request) -> Response:
         order_by = request.query_params.get("order_by", "name")
+        current_page = int(request.query_params.get("current_page", 1))
         use_case = ListCategory(repository=DjangoORMCategoryRepository())
-        output: ListCategoryResponse = use_case.execute(request=ListCategoryRequest(
+        output: ListCategoryResponse = use_case.execute(request=ListRequest(
             order_by=order_by,
-            current_page=int(request.query_params.get("current_page", 1)),
+            current_page=current_page,
         ))
         response_serializer = ListCategoryResponseSerializer(output)
 
