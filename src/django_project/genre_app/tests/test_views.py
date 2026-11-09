@@ -102,7 +102,7 @@ class TestListAPI:
         assert response.data["meta"]["per_page"] == 2
         assert response.data["meta"]["total"] == 2
 
-    def test_list_genres_and_categories_with_pagination(
+    def test_list_genres_and_categories_on_page_1(
         self,
         category_movie: Category,
         category_documentary: Category,
@@ -136,6 +136,38 @@ class TestListAPI:
         assert response.data["meta"]["current_page"] == 1
         assert response.data["meta"]["per_page"] == 2
         assert response.data["meta"]["total"] == 3
+
+
+    def test_list_genres_and_categories_on_page_2(
+        self,
+        category_movie: Category,
+        category_documentary: Category,
+        category_repository: DjangoORMCategoryRepository,
+        genre_romance: Genre,
+        genre_drama: Genre,
+        genre_comedy: Genre,
+        genre_repository: DjangoORMGenreRepository,
+    ) -> None:
+        category_repository.save(category_movie)
+        category_repository.save(category_documentary)
+        genre_repository.save(genre_romance)
+        genre_repository.save(genre_drama)
+        genre_repository.save(genre_comedy)
+
+        url = "/api/genres/?current_page=2"
+        response = APIClient().get(url)
+
+        assert response.data["meta"]
+        assert response.data["meta"]["current_page"] == 2
+        assert response.data["meta"]["per_page"] == 2
+        assert response.data["meta"]["total"] == 3
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["data"]
+        assert response.data["data"][0]["id"] == str(genre_romance.id)
+        assert response.data["data"][0]["name"] == "Romance"
+        assert response.data["data"][0]["is_active"] is True
+        assert set(response.data["data"][0]["categories"]) == {str(category_movie.id), str(category_documentary.id)}
 
 
 @pytest.mark.django_db

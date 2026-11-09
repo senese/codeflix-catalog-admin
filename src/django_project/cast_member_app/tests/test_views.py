@@ -74,7 +74,7 @@ class TestListAPI:
         assert response.status_code == status.HTTP_200_OK
         assert response.data == expected_data
 
-    def test_list_cast_members_with_pagination(
+    def test_list_cast_members_on_page_1(
         self,
         actor: CastMember,
         other_actor: CastMember,
@@ -103,6 +103,38 @@ class TestListAPI:
             ],
             "meta": {
                 "current_page": 1,
+                "per_page": 2,
+                "total": 3,
+            },
+        }
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == expected_data
+
+    def test_list_cast_members_on_page_2(
+        self,
+        actor: CastMember,
+        other_actor: CastMember,
+        director: CastMember,
+        cast_member_repository: DjangoORMCastMemberRepository,
+    ) -> None:
+        cast_member_repository.save(actor)
+        cast_member_repository.save(other_actor)
+        cast_member_repository.save(director)
+
+        url = "/api/cast_members/?current_page=2"
+        response = APIClient().get(url)
+
+        expected_data = {
+            "data": [
+                {
+                    "id": str(director.id),
+                    "name": "John Krasinski",
+                    "type": "DIRECTOR",
+                }
+            ],
+            "meta": {
+                "current_page": 2,
                 "per_page": 2,
                 "total": 3,
             },
